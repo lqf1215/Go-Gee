@@ -3,7 +3,6 @@ package main
 import (
 	"example/gee"
 	"fmt"
-	"html/template"
 	"net/http"
 	"time"
 )
@@ -19,26 +18,11 @@ func FormatAsDate(t time.Time) string {
 }
 
 func main() {
-	r := gee.New()
-	r.Use(gee.Logger())
-	r.SetFuncMap(template.FuncMap{
-		"FormatAsDate": FormatAsDate,
-	})
-	r.LoadHTMLGlob("templates/*")
-	r.Static("/assets", "./static")
+	r := gee.Default()
 
-	stu1 := &student{Name: "Geektutu", Age: 20}
-	stu2 := &student{Name: "Jack", Age: 22}
 	r.GET("/", func(c *gee.Context) {
-		c.HTML(http.StatusOK, "css.tmpl", nil)
+		c.String(http.StatusOK, "Geektutu")
 	})
-	r.GET("/students", func(c *gee.Context) {
-		c.HTML(http.StatusOK, "arr.tmpl", gee.H{
-			"title":  "gee",
-			"stuArr": [2]*student{stu1, stu2},
-		})
-	})
-
 	r.GET("/date", func(c *gee.Context) {
 		c.HTML(http.StatusOK, "custom_func.tmpl", gee.H{
 			"title": "gee",
@@ -46,5 +30,10 @@ func main() {
 		})
 	})
 
+	// 测试 内部存在数组越界 Web 服务就会宕掉
+	r.GET("/panic", func(c *gee.Context) {
+		names := []string{"geektutu"}
+		c.String(http.StatusOK, names[100])
+	})
 	r.Run(":9999")
 }
